@@ -20,10 +20,6 @@ export default function FavoriteScreen() {
   // Assuming you have a similar structure for recipes in your Redux store
   const favoriteRecipes = useSelector((state) => state.favorites);
   const favoriteRecipesList = favoriteRecipes?.favoriterecipes || [];
-  console.log(favoriteRecipes.favoriterecipes);
-  console.log('favoriteRecipesList',favoriteRecipesList);
-  
-  
 
   if (favoriteRecipesList.length === 0) {
     return (
@@ -38,7 +34,7 @@ export default function FavoriteScreen() {
             borderRadius: 5,
             marginTop: 10,
             width: 100,
-            alignItems: "center ",
+            alignItems: "center",
           }}
         >
           <Text style={{ color: "#fff" }}>Go back</Text>
@@ -58,7 +54,8 @@ export default function FavoriteScreen() {
           My Favorite Recipes
         </Text>
       </View>
-    
+
+      {/* Go back button */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         style={{
@@ -70,10 +67,28 @@ export default function FavoriteScreen() {
           alignItems: "center",
           marginLeft: 20,
         }}
+        testID="goBackButton"
       >
         <Text style={{ color: "#fff" }}>Go back</Text>
       </TouchableOpacity>
-    
+
+      {/* Favorite Recipes List */}
+      <FlatList
+        data={favoriteRecipesList}
+        keyExtractor={(item) => item.idFood?.toString() || item.title || Math.random().toString()}
+        contentContainerStyle={styles.listContentContainer}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.cardContainer}
+            onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+          >
+            <Image source={{ uri: item.recipeImage || item.image }} style={styles.recipeImage} />
+            <Text style={styles.recipeTitle}>
+              {(item.recipeName || item.title).length > 20 ? (item.recipeName || item.title).slice(0, 20) + "..." : (item.recipeName || item.title)}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
     </>
   );
 }

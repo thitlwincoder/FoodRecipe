@@ -12,19 +12,47 @@ export default function RecipesFormScreen({ route, navigation }) {
   );
 
   const saverecipe = async () => {
- 
+    // Basic validation
+    if (!title.trim()) {
+      alert("Please enter a recipe title");
+      return;
+    }
+
+    try {
+      const newrecipe = { title: title.trim(), image: image.trim(), description: description.trim() };
+      const storedRecipes = await AsyncStorage.getItem("customrecipes");
+      let recipes = storedRecipes ? JSON.parse(storedRecipes) : [];
+      if (recipeToEdit && typeof recipeIndex === "number") {
+        // Edit existing recipe
+        recipes[recipeIndex] = newrecipe;
+        await AsyncStorage.setItem("customrecipes", JSON.stringify(recipes));
+        if (onrecipeEdited) onrecipeEdited();
+      } else {
+        // Add new recipe
+        recipes.push(newrecipe);
+        await AsyncStorage.setItem("customrecipes", JSON.stringify(recipes));
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.log("Error saving recipe:", error);
+      alert("Failed to save recipe. Please try again.");
+    }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>
+        {recipeToEdit ? "Edit Recipe" : "Add New Recipe"}
+      </Text>
+      
       <TextInput
-        placeholder="Title"
+        placeholder="Recipe Title *"
         value={title}
         onChangeText={setTitle}
         style={styles.input}
       />
       <TextInput
-        placeholder="Image URL"
+        placeholder="Image URL (optional)"
         value={image}
         onChangeText={setImage}
         style={styles.input}
@@ -32,18 +60,22 @@ export default function RecipesFormScreen({ route, navigation }) {
       {image ? (
         <Image source={{ uri: image }} style={styles.image} />
       ) : (
-        <Text style={styles.imagePlaceholder}>Upload Image URL</Text>
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.placeholderText}>No image preview</Text>
+        </View>
       )}
       <TextInput
-        placeholder="Description"
+        placeholder="Recipe Description"
         value={description}
         onChangeText={setDescription}
         multiline={true}
         numberOfLines={4}
-        style={[styles.input, { height: hp(20), textAlignVertical: "top" }]}
+        style={[styles.input, styles.descriptionInput]}
       />
       <TouchableOpacity onPress={saverecipe} style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Save recipe</Text>
+        <Text style={styles.saveButtonText}>
+          {recipeToEdit ? "Update Recipe" : "Save Recipe"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -53,38 +85,64 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: wp(4),
+    backgroundColor: "#F9FAFB",
+    paddingTop: hp(6),
+  },
+  header: {
+    fontSize: hp(3),
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: hp(3),
+    textAlign: "center",
   },
   input: {
-    marginTop: hp(4),
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: wp(.5),
+    borderColor: "#D1D5DB",
+    padding: wp(3),
     marginVertical: hp(1),
+    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    fontSize: hp(2),
+  },
+  descriptionInput: {
+    height: hp(20),
+    textAlignVertical: "top",
   },
   image: {
-    width: 300,
-    height:200,
-    margin: wp(2),
+    width: "100%",
+    height: hp(25),
+    borderRadius: 8,
+    marginVertical: hp(1),
   },
   imagePlaceholder: {
-    height: hp(20),
+    height: hp(15),
     justifyContent: "center",
     alignItems: "center",
     marginVertical: hp(1),
     borderWidth: 1,
-    borderColor: "#ddd",
-    textAlign: "center",
-    padding: wp(2),
+    borderColor: "#D1D5DB",
+    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
+  },
+  placeholderText: {
+    color: "#6B7280",
+    fontSize: hp(1.8),
   },
   saveButton: {
     backgroundColor: "#4F75FF",
-    padding: wp(.5),
+    padding: wp(4),
     alignItems: "center",
-    borderRadius: 5,
-    marginTop: hp(2),
+    borderRadius: 8,
+    marginTop: hp(3),
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   saveButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: hp(2.2),
   },
 });

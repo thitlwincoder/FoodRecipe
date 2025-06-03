@@ -1,5 +1,4 @@
-
-import { View, Text, ScrollView, Image, StyleSheet } from "react-native";
+import { View, Text, FlatList, Image, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -705,37 +704,83 @@ export default function HomeScreen() {
     (food) => food.category === activeCategory
   );
 
+  // Prepare data for FlatList sections
+  const sections = [
+    {
+      type: 'header',
+      data: null
+    },
+    {
+      type: 'title',
+      data: null
+    },
+    {
+      type: 'categories',
+      data: categories
+    },
+    {
+      type: 'foods',
+      data: filteredfoods
+    }
+  ];
+
+  const renderSection = ({ item }) => {
+    switch (item.type) {
+      case 'header':
+        return (
+          <View style={styles.headerContainer} testID="headerContainer">
+            <Image
+              source={{uri:'https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png'}}
+              style={styles.avatar}
+            />
+            <Text style={styles.greetingText}>Hello, User!</Text>
+          </View>
+        );
+
+      case 'title':
+        return (
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Make your own food,</Text>
+            <Text style={styles.subtitle}>
+              stay at <Text style={styles.highlight}>home</Text>
+            </Text>
+          </View>
+        );
+
+      case 'categories':
+        return (
+          <View testID="categoryList">
+            <Categories
+              categories={item.data}
+              activeCategory={activeCategory}
+              handleChangeCategory={handleChangeCategory}
+            />
+          </View>
+        );
+
+      case 'foods':
+        return (
+          <View testID="foodList">
+            <FoodItems foods={item.data} categories={categories} />
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <ScrollView
+      <FlatList
+        data={sections}
+        renderItem={renderSection}
+        keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
-        testID="scrollContainer"
-      >
-        <View style={styles.headerContainer} testID="headerContainer">
-        <Image
-            source={{uri:'https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png'}}
-            style={styles.avatar}
-          />
-          <Text style={styles.greetingText}>Hello, User!</Text>
-        </View>
-
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Make your own food,</Text>
-          <Text style={styles.subtitle}>
-            stay at <Text style={styles.highlight}>home</Text>
-          </Text>
-        </View>
-
-        <View testID="categoryList">
-       
-        </View>
-
-        <View testID="foodList">
-
-          </View>
-      </ScrollView>
+        contentContainerStyle={styles.flatListContainer}
+        testID="flatListContainer"
+      />
     </View>
   );
 }
@@ -745,17 +790,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF", // white
   },
-  scrollContainer: {
-    paddingBottom: 50,
-    paddingTop: hp(14), // pt-14 equivalent
-  },
   headerContainer: {
     marginHorizontal: wp(4), // mx-4 equivalent
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: hp(2),
-    marginTop: hp(-8.5),
+    marginTop: hp(-8.5)
   },
   avatar: {
     height: hp(5),
@@ -787,5 +828,9 @@ const styles = StyleSheet.create({
   },
   highlight: {
     color: "#F59E0B", // amber-400
+  },
+  flatListContainer: {
+    paddingVertical: hp(2),
+    paddingTop: hp(14), // Add top padding to account for status bar
   },
 });

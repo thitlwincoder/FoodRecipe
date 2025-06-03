@@ -1,7 +1,7 @@
 import {
     View,
     Text,
-    ScrollView,
+    FlatList,
     Image,
     StyleSheet,
     TouchableOpacity,
@@ -28,7 +28,10 @@ import {
     );
     console.log('favoriteRecipe from custom',favoriteRecipe);
     
-    const isFavourite = favoriteRecipe.includes(recipe.idCategory); // Adjust this according to your recipe structure
+    // Check if this custom recipe is in favorites by comparing title (since custom recipes don't have idFood)
+    const isFavourite = favoriteRecipe.some(
+      (favRecipe) => favRecipe.title === recipe.title
+    );
   
     if (!recipe) {
       return (
@@ -41,45 +44,80 @@ import {
     const handleToggleFavorite = () => {
       dispatch(toggleFavorite(recipe)); // Adjust the action to handle recipe
     };
+
+    // Prepare data for FlatList
+    const sections = [
+      {
+        type: 'header',
+        data: {
+          image: recipe.image,
+          title: recipe.title
+        }
+      },
+      {
+        type: 'content',
+        data: recipe.description
+      }
+    ];
+
+    const renderSection = ({ item }) => {
+      switch (item.type) {
+        case 'header':
+          return (
+            <View>
+              {/* Recipe Image */}
+              <View style={styles.imageContainer} testID="imageContainer">
+                {item.data.image && (
+                  <Image source={{ uri: item.data.image }} style={styles.recipeImage} />
+                )}
+              </View>
+              <View
+                style={styles.topButtonsContainer} testID="topButtonsContainer"
+              >
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={styles.backButton}
+                >
+                  <Text>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleToggleFavorite}
+                  style={styles.favoriteButton}
+                >
+                  <Text>{isFavourite ? "♥" : "♡"}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Recipe Details */}
+              <View style={styles.contentContainer} testID="contentContainer">
+                <Text style={styles.recipeTitle}>{item.data.title}</Text>
+              </View>
+            </View>
+          );
+
+        case 'content':
+          return (
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Content</Text>
+              <Text style={styles.contentText}>{item.data}</Text>
+            </View>
+          );
+
+        default:
+          return null;
+      }
+    };
   
     return (
-      <ScrollView
+      <FlatList
         style={styles.container}
+        data={sections}
+        renderItem={renderSection}
+        keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent} testID="scrollContent"
-      >
-        {/* Recipe Image */}
-        <View style={styles.imageContainer} testID="imageContainer">
-        {recipe.image && (
-            <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-          )}
-        </View>
-        <View
-          style={styles.topButtonsContainer} testID="topButtonsContainer"
-        >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Text>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleToggleFavorite}
-            style={styles.favoriteButton}
-          >
-            <Text>{isFavourite ? "♥" : "♡"}</Text>
-          </TouchableOpacity>
-        </View>
-  
-        {/* Recipe Details */}
-        <View style={styles.contentContainer} testID="contentContainer">
-        <Text style={styles.recipeTitle}>{recipe.title}</Text>
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>Content</Text>
-    <Text style={styles.contentText}>{recipe.description}</Text>
-  </View>
-        </View>
-      </ScrollView>
+        contentContainerStyle={styles.flatListContent}
+        testID="flatListContent"
+      />
     );
   }
   
@@ -89,6 +127,9 @@ import {
       flex: 1,
     },
     scrollContent: {
+      paddingBottom: 30,
+    },
+    flatListContent: {
       paddingBottom: 30,
     },
     imageContainer: {
